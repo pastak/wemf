@@ -157,7 +157,10 @@ module.exports = class Formatter {
         if (rule[1].supportValues) {
           target.filter((val) => rule[1].supportValues.indexOf(val) === -1)
           .forEach((unsupportVal) => {
-            if (rule[0] === 'permissions' && this.checkValidHostPattern(unsupportVal)) return
+            if (
+              (rule[0] === 'permissions' || rule[0] === 'optional_permissions') &&
+              this.checkValidHostPattern(unsupportVal)
+            ) return
 
             if (cb(rule[0], unsupportVal) === 'delete') {
               target.splice(target.indexOf(unsupportVal), 1)
@@ -170,7 +173,11 @@ module.exports = class Formatter {
 
   checkValidHostPattern (val) {
     if (val === '<all_urls>') return true
-    return /^(http|https|file|ftp|\*):\/\/(\*|((\*\.)?[^\/\*]+))?\/.*$/.test(val)
+    const result = /^(http|https|file|ftp|\*):\/\/(\*|((\*\.)?[^\/\*]+))?\/.*$/.test(val)
+    if (!result) {
+      this.errorMessages.push(`${val} is invalid on permissons host pattern`)
+    }
+    return result
   }
 
   checkUnsupportedProps () {
