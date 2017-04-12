@@ -43,8 +43,14 @@ program
   .option('--validate', 'Only validate manifest.json')
   .option('-O --output <path>', 'Output manifest.json path')
   .option('-U --update', 'Update manifest.json itself')
+  .option('--browser <browser-name>', 'Set target browser (chrome|firefox|edge) default: firefox')
   .action((packageJsonPath) => {
-    const formatter = new Formatter(packageJsonPath)
+    const browser = program.browser
+    if (!/^(chrome|firefox|edge)$/.test(browser)) {
+      console.error('You should choose browser from [chrome,firefox,edge]')
+      process.exit(1)
+    }
+    const formatter = new Formatter(packageJsonPath, browser)
     if (program.validate) {
       if (!formatter.validator()) {
         console.error(formatter.errorMessages.join('\n'))
