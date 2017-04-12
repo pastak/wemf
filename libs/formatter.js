@@ -19,6 +19,8 @@ module.exports = class Formatter {
     this.browser = browser
     this.unSupportedKeys = []
     this.errorMessages = []
+    this.warningMessage = []
+    this.recommendMessage = []
 
     this.rules = {}
     this.validKeys = []
@@ -52,12 +54,22 @@ module.exports = class Formatter {
   validator () {
     this.errorMessages = []
     this.checkRequiredKey()
+    this.checkRecommendedKey()
     this.checkUnsupportedKey()
     this.checkUnsupportedProps()
     this.checkApplicationsKeyFormat()
     const result = this.errorMessages.length === 0
     this.isValid = result
     return result
+  }
+
+  checkRecommendedKey () {
+    const recommendKeys = this.rules['recommend']
+    recommendKeys.forEach((key) => {
+      if (!this.hasKey(key)) {
+        this.recommendMessage.push(`set ${key} is good`)
+      }
+    })
   }
 
   checkUnsupportedKeyOrProps () {
@@ -166,6 +178,18 @@ module.exports = class Formatter {
               target.splice(target.indexOf(unsupportVal), 1)
             }
           })
+        }
+        if (rule[1].recommend) {
+          const recommend = rule[1].recommend
+          if (typeof recommend === 'object') {
+            Object.keys(recommend).forEach((key) => {
+              if (recommend[key] !== target[key]) {
+                this.recommendMessage.push(`${recommend[key]} is better than ${target[key]} on ${key} of ${rule[0]}`)
+              }
+            })
+          } else if (recommend !== target) {
+            this.recommendMessage.push(`${recommend} is better than ${target} on ${rule[0]}`)
+          }
         }
       })
     })
