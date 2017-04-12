@@ -1,4 +1,4 @@
-# wemf
+# WebExtension Manifest Formatter
 
 [![Build Status](https://travis-ci.org/pastak/wemf.svg?branch=master)](https://travis-ci.org/pastak/wemf)
 
@@ -7,7 +7,7 @@
 [![](https://nodei.co/npm/wemf.png?downloads=true&downloadRank=true&stars=true)](https://www.npmjs.com/package/wemf)
 
 
-Formater and validator for manifest.json on Chrome Extension / Firefox WebExtension / Extension for Edge.
+Formatter and validator for manifest.json on Chrome Extension / Firefox WebExtension / Extension for Edge.
 
 ## Install
 
