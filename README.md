@@ -7,7 +7,7 @@
 [![](https://nodei.co/npm/wemf.png?downloads=true&downloadRank=true&stars=true)](https://www.npmjs.com/package/wemf)
 
 
-Format manifest.json to use on WebExtension from Chrome Extension
+Formater and validator for manifest.json on Chrome Extension / Firefox WebExtension / Extension for Edge.
 
 ## Install
 
@@ -25,6 +25,7 @@ Format manifest.json to use on WebExtension from Chrome Extension
     --validate          Only validate manifest.json
     -O --output <path>  Output manifest.json path
     -U --update         Update manifest.json itself
+    --browser <browser-name>  Set target browser (chrome|firefox|edge) default: firefox
 ```
 
 ### Formatter
