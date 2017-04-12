@@ -17,7 +17,7 @@ const inputKey = (formatter) => (key) => {
     while (1) {
       const id = readlineSync.question('Type your extension id :')
       formatter.fillMustKey('applications', id)
-      if (formatter.validApplicationsKey()) break
+      if (formatter.checkApplicationsKeyFormat()) break
       console.log(`Your extension id "${id}" is invalid`)
       console.log(`ex: addon-name@yourdomain.net`)
     }
@@ -47,7 +47,7 @@ program
     const formatter = new Formatter(packageJsonPath)
     if (program.validate) {
       if (!formatter.validator()) {
-        console.error(formatter.messages.join('\n'))
+        console.error(formatter.errorMessages.join('\n'))
         process.exit(1)
       }
       return

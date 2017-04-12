@@ -2,10 +2,10 @@
 const fs = require('fs')
 const path = require('path')
 const GUID = require('guid')
-const validKeys = require('./data/validKeys.json')
-const notSupportProps = require('./data/notSupportProps.json')
+const keyRules = require('./manifestKeyRules')
+
 module.exports = class Formatter {
-  constructor (_path) {
+  constructor (_path, browser = 'firefox') {
     try {
       this.json = JSON.parse(fs.readFileSync(path.resolve(_path)))
       try {
@@ -16,19 +16,57 @@ module.exports = class Formatter {
     } catch (e) {
       throw new Error(e)
     }
-    this.shouldContainKeys = []
+    this.browser = browser
     this.unSupportedKeys = []
-    this.messages = []
+    this.errorMessages = []
+
+    this.rules = {}
+    this.validKeys = []
+
+    this.loadRules()
     this.validator()
   }
-  validator () {
-    this.messages = []
-    this.isValid = this.checkMustKey() &&
-      this.checkUnsupportedKeyOrProps() &&
-      this.validApplicationsKey()
-    return this.isValid
+
+  loadRules () {
+    const browser = this.browser
+    const rules = keyRules[browser]
+    Object.keys(rules).forEach((key) => {
+      this.rules[key] = []
+      if (key === 'optional_permissions' && Array.isArray(rules['permissions'])) {
+        this.rules[key] = [key, rules['permissions'][1]]
+        this.validKeys.push(key)
+      } else if (rules[key] === 'inherit') {
+        keyRules['chrome'][key].forEach((rule) => {
+          this.rules[key].push(rule)
+          this.validKeys.push(Array.isArray(rule) ? rule[0] : rule)
+        })
+      } else {
+        rules[key].forEach((rule) => {
+          this.rules[key].push(rule)
+          this.validKeys.push(Array.isArray(rule) ? rule[0] : rule)
+        })
+      }
+    })
   }
-  validApplicationsKey () {
+
+  validator () {
+    this.errorMessages = []
+    this.checkRequiredKey()
+    this.checkUnsupportedKey()
+    this.checkUnsupportedProps()
+    this.checkApplicationsKeyFormat()
+    const result = this.errorMessages.length === 0
+    this.isValid = result
+    return result
+  }
+
+  checkUnsupportedKeyOrProps () {
+    return this.checkUnsupportedKey() && this.checkUnsupportedProps()
+  }
+
+  checkApplicationsKeyFormat () {
+    // applicationsをサポートしていない場合はチェックしない
+    if (this.validKeys.indexOf('applications') === -1) return true
     const applications = this.json.applications
     if (!(applications &&
       applications.hasOwnProperty('gecko') &&
@@ -38,21 +76,32 @@ module.exports = class Formatter {
     // Check Valid ID
     // NOTE: You can't use +
     if (!(/^[A-Z|a-z|0-9|\-|\.]+@[a-z|A-Z|0-9|-]+(\.[a-z-A-Z]+)+$/).test(id) || GUID.isGuid(id)) {
-      this.messages.push(`Invaid id: ${id}`)
+      this.errorMessages.push(`Invaid id: ${id}`)
       return false
     }
     return true
   }
-  checkMustKey () {
-    this.shouldContainKeys = []
-    const keys = ['applications', 'manifest_version', 'name', 'version']
-    keys.forEach((key) => {
-      if (!this.json.hasOwnProperty(key)) this.shouldContainKeys.push(key)
+
+  hasKey (rule) {
+    const keyName = this.getKeyName(rule)
+    return this.json[keyName] !== undefined
+  }
+
+  getKeyName (rule) {
+    return typeof rule === 'string' ? rule : rule[0]
+  }
+
+  checkRequiredKey () {
+    const shouldContainKeys = []
+    const requiredKeys = this.rules['required']
+    requiredKeys.forEach((rule) => {
+      if (!this.hasKey(rule)) shouldContainKeys.push(this.getKeyName(rule))
     })
-    const result = this.shouldContainKeys.length === 0
+    const result = shouldContainKeys.length === 0
     if (!result) {
-      this.messages.push(`WebExtension must have keys: ${this.shouldContainKeys.join(', ')}`)
+      this.errorMessages.push(`${this.browser}'s extension must have keys: ${shouldContainKeys.join(', ')}`)
     }
+    this.shouldContainKeys = shouldContainKeys
     return result
   }
   fillMustKey (key, val) {
@@ -81,62 +130,54 @@ module.exports = class Formatter {
     this.validator()
   }
   checkUnsupportedKey () {
-    const containedKey = Object.keys(this.json).filter(k => validKeys.indexOf(k) === -1)
+    const containedKey = Object.keys(this.json).filter(k => this.validKeys.indexOf(k) === -1)
     if (containedKey.length === 0) {
       return true
     } else {
-      this.messages.push(`WebExtension does not yet support keys: ${containedKey.join(', ')}`)
+      this.errorMessages.push(`${this.browser}'s extension does not yet support keys: ${containedKey.join(', ')}`)
       return false
     }
   }
+
   searchUnsupportedProps (cb) {
-    Object.keys(notSupportProps).filter(k => this.json.hasOwnProperty(k)).forEach(k => {
-      const condition = notSupportProps[k]
-      if (condition.hasOwnProperty('___type')) {
-        if (condition.___type === 'keyword') {
-          condition.___keyword.forEach(keyword => {
-            if (Array.isArray(this.json[k])) {
-              this.json[k].forEach(_k => {
-                if (_k.indexOf(keyword) > -1) {
-                  cb(k, keyword, true)
-                }
-              })
-            } else if (typeof this.json[k] === 'string') {
-              condition.___keyword.forEach(keyword => {
-                if (this.json[k].indexOf(keyword) === -1) return
-                cb(k, keyword, true)
-              })
+    Object.keys(this.rules).forEach((ruleType) => {
+      this.rules[ruleType]
+      .filter((rule) => typeof rule !== 'string' && Array.isArray(rule))
+      .forEach((rule) => {
+        let target = this.json[rule[0]]
+        if (!target) return
+        if (rule[1].unsupportProps) {
+          rule[1].unsupportProps.forEach((unsupportProp) => {
+            if (!target.hasOwnProperty(unsupportProp)) return
+            if (cb(rule[0], unsupportProp) === 'delete') {
+              delete target[unsupportProp]
             }
           })
         }
-      } else {
-        condition.forEach(prop => {
-          if (Array.isArray(this.json[k])) {
-            this.json[k].forEach((item, index) => {
-              if (typeof item === 'string') {
-                if (item === prop) {
-                  if (cb(k, prop) === 'delete') this.json[k].splice(this.json[k].indexOf(prop), 1)
-                }
-              } else {
-                if (item.hasOwnProperty(prop)) {
-                  if (cb(k, prop) === 'delete') delete item[prop]
-                }
-              }
-            })
-          } else {
-            if (this.json[k].hasOwnProperty(prop)) {
-              if (cb(k, prop) === 'delete') delete this.json[k][prop]
+        if (rule[1].supportValues) {
+          target.filter((val) => rule[1].supportValues.indexOf(val) === -1)
+          .forEach((unsupportVal) => {
+            if (rule[0] === 'permissions' && this.checkValidHostPattern(unsupportVal)) return
+
+            if (cb(rule[0], unsupportVal) === 'delete') {
+              target.splice(target.indexOf(unsupportVal), 1)
             }
-          }
-        })
-      }
+          })
+        }
+      })
     })
   }
+
+  checkValidHostPattern (val) {
+    if (val === '<all_urls>') return true
+    return /^(http|https|file|ftp|\*):\/\/(\*|((\*\.)?[^\/\*]+))?\/.*$/.test(val)
+  }
+
   checkUnsupportedProps () {
     let result = true
     this.searchUnsupportedProps((k, keyword) => {
       result = false
-      this.messages.push(`${k} does'nt yet support keyword '${keyword}'`)
+      this.errorMessages.push(`${k} does'nt yet support keyword '${keyword}'`)
     })
     return result
   }
@@ -151,13 +192,10 @@ module.exports = class Formatter {
   }
   deleteUnsupportedKey () {
     Object.keys(this.json)
-      .filter(k => validKeys.indexOf(k) === -1)
+      .filter(k => this.validKeys.indexOf(k) === -1)
       .forEach(k => {
         delete this.json[k]
       })
     this.validator()
-  }
-  checkUnsupportedKeyOrProps () {
-    return this.checkUnsupportedKey() && this.checkUnsupportedProps()
   }
 }

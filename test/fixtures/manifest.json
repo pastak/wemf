@@ -34,6 +34,7 @@
     "page": "option/options.html",
     "chrome_style": false
   },
+  "unsupported_key": "dummy",
   "manifest_version": 2,
   "default_locale": "en"
 }

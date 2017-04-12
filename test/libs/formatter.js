@@ -13,16 +13,16 @@ test('checkUnsupportedKeyOrProps', t => {
   t.ok(formatter.checkUnsupportedKeyOrProps() === false)
 })
 
-test('checkMustKey', t => {
+test('checkRequiredKey', t => {
   const formatter = new Formatter('../fixtures/check_must_key.json')
-  t.ok(formatter.checkMustKey() === false)
+  t.ok(formatter.checkRequiredKey() === false)
   t.ok(formatter.shouldContainKeys.indexOf('applications') > -1 === true)
   t.ok(formatter.shouldContainKeys.indexOf('manifest_version') > -1 === true)
   t.ok(formatter.shouldContainKeys.indexOf('name') > -1 === true)
   t.ok(formatter.shouldContainKeys.indexOf('version') > -1 === true)
 
   const formatter2 = new Formatter('../fixtures/check_must_key_pass.json')
-  t.ok(formatter2.checkMustKey() === true)
+  t.ok(formatter2.checkRequiredKey() === true)
   t.is(formatter2.shouldContainKeys.length, 0)
 })
 
@@ -32,14 +32,14 @@ test('fillMustKey `applications`', t => {
   formatter.fillMustKey('applications', 'sample-extension@example.com')
   t.is(formatter.shouldContainKeys.indexOf('applications') > -1, false)
   t.is(formatter.json.applications.gecko.id, 'sample-extension@example.com')
-  t.is(formatter.validApplicationsKey(), true)
+  t.is(formatter.checkApplicationsKeyFormat(), true)
 
   // Write `id`'s Key and Val
   const formatter2 = new Formatter('../fixtures/check_must_key.json')
   formatter2.fillMustKey('applications', {id: 'sample-extension@example.com'})
   t.is(formatter2.shouldContainKeys.indexOf('applications') > -1, false)
   t.is(formatter2.json.applications.gecko.id, 'sample-extension@example.com')
-  t.is(formatter2.validApplicationsKey(), true)
+  t.is(formatter2.checkApplicationsKeyFormat(), true)
 
   // Write Full Structor
   const formatter3 = new Formatter('../fixtures/check_must_key.json')
@@ -50,24 +50,24 @@ test('fillMustKey `applications`', t => {
   })
   t.is(formatter3.shouldContainKeys.indexOf('applications') > -1, false)
   t.is(formatter3.json.applications.gecko.id, 'sample-extension@example.com')
-  t.is(formatter3.validApplicationsKey(), true)
+  t.is(formatter3.checkApplicationsKeyFormat(), true)
 
   // Write invalid Id String
   const formatter4 = new Formatter('../fixtures/check_must_key.json')
   formatter4.fillMustKey('applications', 'authoradgadkdaldgau')
   t.is(formatter4.shouldContainKeys.indexOf('applications') > -1, false)
-  t.is(formatter4.validApplicationsKey(), false)
+  t.is(formatter4.checkApplicationsKeyFormat(), false)
 
   // Write invalid Id String
   const formatter5 = new Formatter('../fixtures/check_must_key.json')
   formatter5.fillMustKey('applications', 'author+amo@example.com')
   t.is(formatter5.shouldContainKeys.indexOf('applications') > -1, false)
-  t.is(formatter5.validApplicationsKey(), false)
+  t.is(formatter5.checkApplicationsKeyFormat(), false)
 
   // id's domain has 2 .(dots)
   const formatter6 = new Formatter('../fixtures/check_must_key.json')
   formatter6.fillMustKey('applications', 'test@kmc.gr.jp')
-  t.is(formatter6.validApplicationsKey(), true)
+  t.is(formatter6.checkApplicationsKeyFormat(), true)
 })
 
 test('fillMustKey `version`', t => {
@@ -126,9 +126,6 @@ test('checkUnsupportedProps', t => {
 
   const formatter2 = new Formatter('../fixtures/manifest.json')
   t.is(formatter2.checkUnsupportedProps(), false)
-
-  const formatter3 = new Formatter('../fixtures/invalid_web_accessible_resources.json')
-  t.is(formatter3.checkUnsupportedProps(), false)
 })
 
 test('deleteUnsupportedProps', t => {
@@ -136,11 +133,6 @@ test('deleteUnsupportedProps', t => {
   t.is(formatter.checkUnsupportedProps(), false)
   formatter.deleteUnsupportedProps()
   t.ok(formatter.checkUnsupportedProps())
-
-  const formatter2 = new Formatter('../fixtures/invalid_web_accessible_resources.json')
-  t.is(formatter2.checkUnsupportedProps(), false)
-  formatter2.deleteUnsupportedProps()
-  t.ok(formatter2.messages.length > 0)
 })
 
 test('deleteUnsupportedKey', t => {
@@ -168,12 +160,12 @@ test('Merge applications column from package.json', t => {
   const Formatter = proxyquire('../../libs/formatter', {fs: fsStub})
   const formatter = new Formatter('../fixtures/check_must_key.json')
   t.is(formatter.json.applications.gecko.id, 'hoge@example.com')
-  t.is(formatter.validApplicationsKey(), true)
+  t.is(formatter.checkApplicationsKeyFormat(), true)
 
   const Formatter2 = proxyquire('../../libs/formatter', {fs: fsStub})
   const formatter2 = new Formatter('../fixtures/check_must_key_pass.json')
   t.is(formatter2.json.applications.gecko.id, 'sample@example.com')
-  t.is(formatter2.validApplicationsKey(), true)
+  t.is(formatter2.checkApplicationsKeyFormat(), true)
 })
 
 test('General Check', t => {
@@ -188,4 +180,22 @@ test('General Check', t => {
   t.is(formatter.isValid, false)
   formatter.deleteUnsupportedKey()
   t.ok(formatter.isValid)
+})
+
+test('checkValidHostPattern', t => {
+  // Patterns from https://developer.chrome.com/extensions/match_patterns
+  const formatter = new Formatter('../fixtures/manifest.json')
+  t.is(formatter.checkValidHostPattern('http:/bar'), false)
+  t.is(formatter.checkValidHostPattern('foo://*'), false)
+  t.is(formatter.checkValidHostPattern('http://*/*'), true)
+  t.is(formatter.checkValidHostPattern('http://*/foo*'), true)
+  t.is(formatter.checkValidHostPattern('https://*.google.com/foo*bar'), true)
+  t.is(formatter.checkValidHostPattern('http://example.org/foo/bar.html'), true)
+  t.is(formatter.checkValidHostPattern('file:///foo*'), true)
+  t.is(formatter.checkValidHostPattern('http://127.0.0.1/*'), true)
+  t.is(formatter.checkValidHostPattern('*://mail.google.com/*'), true)
+  t.is(formatter.checkValidHostPattern('<all_urls>'), true)
+  t.is(formatter.checkValidHostPattern('http://www.google.com'), false)
+  t.is(formatter.checkValidHostPattern('http://*foo/bar'), false)
+  t.is(formatter.checkValidHostPattern('http://foo.*.bar/baz'), false)
 })
