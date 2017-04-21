@@ -45,6 +45,7 @@ program
   .option('-U --update', 'Update manifest.json itself')
   .option('--browser <browser-name>', 'Set target browser (chrome|firefox|edge) default: firefox')
   .option('--no-color', 'disable color in output')
+  .option('--quiet', 'hide WARNING and RECOMMEND messages')
   .action((packageJsonPath) => {
 
     const RESET_COLOR = program.color ? '\u001b[0m' : ''
@@ -62,10 +63,10 @@ program
       process.exit(1)
     }
     const formatter = new Formatter(packageJsonPath, browser)
-    if (formatter.recommendMessage.length > 0) {
+    if (!program.quiet && formatter.recommendMessage.length > 0) {
       console.warn(RECOMMEND_TEXT + ': ' + formatter.recommendMessage.join('\n' + RECOMMEND_TEXT + ': '))
     }
-    if (formatter.warningMessage.length > 0) {
+    if (!program.quiet && formatter.warningMessage.length > 0) {
       console.warn(WARNING_TEXT + ': ' + formatter.warningMessage.join('\n' + WARNING_TEXT + ': '))
     }
     if (program.validate) {
