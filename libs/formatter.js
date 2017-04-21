@@ -13,7 +13,7 @@ module.exports = class Formatter {
         const webextensionConfig = _package.webextension
         this.json = Object.assign(webextensionConfig, this.json)
         ;['name', 'version', 'author', 'description', 'homepage_url'].forEach((key) => {
-          if (this.json['key'] === 'inherit') this.json['key'] = _package[key === 'homepage_url' ? 'homepage' : key]
+          if (this.json[key] === 'inherit') this.json[key] = _package[key === 'homepage_url' ? 'homepage' : key]
         })
       } catch (e) {}
     } catch (e) {
