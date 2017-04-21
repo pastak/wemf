@@ -37,15 +37,6 @@ const inputKey = (formatter) => (key) => {
   }
 }
 
-const RESET_COLOR = '\u001b[0m'
-const WARNING_COLOR = '\u001b[33m'
-const RECOMMEND_COLOR = '\u001b[34m'
-const ERROR_COLOR = '\u001b[31m'
-
-const WARNING_TEXT = `${WARNING_COLOR}WARNING${RESET_COLOR}`
-const RECOMMEND_TEXT = `${RECOMMEND_COLOR}RECOMMEND${RESET_COLOR}`
-const ERROR_TEXT = `${ERROR_COLOR}ERROR${RESET_COLOR}`
-
 program
   .usage('<packageJsonPath> [options]')
   .version(require('../package.json').version)
@@ -53,7 +44,18 @@ program
   .option('-O --output <path>', 'Output manifest.json path')
   .option('-U --update', 'Update manifest.json itself')
   .option('--browser <browser-name>', 'Set target browser (chrome|firefox|edge) default: firefox')
+  .option('--no-color', 'disable color in output')
   .action((packageJsonPath) => {
+
+    const RESET_COLOR = program.color ? '\u001b[0m' : ''
+    const WARNING_COLOR = program.color ? '\u001b[33m' : ''
+    const RECOMMEND_COLOR = program.color ? '\u001b[34m' : ''
+    const ERROR_COLOR = program.color ? '\u001b[31m' : ''
+
+    const WARNING_TEXT = `${WARNING_COLOR}WARNING${RESET_COLOR}`
+    const RECOMMEND_TEXT = `${RECOMMEND_COLOR}RECOMMEND${RESET_COLOR}`
+    const ERROR_TEXT = `${ERROR_COLOR}ERROR${RESET_COLOR}`
+
     const browser = program.browser
     if (browser !== undefined && !/^(chrome|firefox|edge)$/.test(browser)) {
       console.error('You should choose browser from [chrome,firefox,edge]')
