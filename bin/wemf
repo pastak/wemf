@@ -12,7 +12,6 @@ try {
 } catch (e) {}
 
 const inputKey = (formatter) => (key) => {
-  'name', 'version'
   if (key === 'applications') {
     while (1) {
       const id = readlineSync.question('Type your extension id :')
