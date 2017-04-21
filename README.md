@@ -38,7 +38,9 @@ Formatter and validator for manifest.json on Chrome Extension / Firefox WebExten
 
 if it has no problem, return nothing
 
-### Note
+### Tips
+
+#### Set custom value via `package.json`
 
 If you want to fill columns (ex: `applications`) automatically, you should write `webextension` column on project's `package.json`.
 
@@ -49,6 +51,7 @@ Example
   "name": "hoge",
   ...
   "webextension": {
+    "name": 'extension-name',
     "applications": {
       "gecko": {
         "id": "sample-extension@example.org",
@@ -58,6 +61,10 @@ Example
   }
 }
 ```
+
+#### inherit value from `package.json`
+
+When `name`, `version`, `author`, `description` or `homepage_url` is filled `inherit`, `manifest.json`'s field will be filled by same key name value from `package.json` (`homepage_url` will be filled by `homepage` in `package.json`)
 
 ## information
 
