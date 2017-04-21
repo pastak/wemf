@@ -10,7 +10,7 @@ module.exports = class Formatter {
       this.json = JSON.parse(fs.readFileSync(path.resolve(_path)))
       try {
         const _package = JSON.parse(fs.readFileSync(path.resolve('package.json')))
-        const webextensionConfig = _package.webextension
+        const webextensionConfig = _package.webextension || {}
         this.json = Object.assign(webextensionConfig, this.json)
         ;['name', 'version', 'author', 'description', 'homepage_url'].forEach((key) => {
           if (this.json[key] === 'inherit') this.json[key] = _package[key === 'homepage_url' ? 'homepage' : key]
