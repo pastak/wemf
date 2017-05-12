@@ -185,6 +185,8 @@ const edge = {
     'background',
     'content_scripts',
     'content_security_policy',
+    'default_locale',
+    'minimum_edge_version',
     'key',
     'options_page',
     ['permissions', {
