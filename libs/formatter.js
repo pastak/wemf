@@ -70,7 +70,7 @@ module.exports = class Formatter {
     const recommendKeys = this.rules['recommend']
     recommendKeys.forEach((key) => {
       if (!this.hasKey(key)) {
-        this.recommendMessage.push(`set ${key} is good`)
+        this.recommendMessage.push(`set ${key}`)
       }
     })
   }

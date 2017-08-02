@@ -13,7 +13,7 @@ const chrome = {
     'chrome_settings_overrides',
     'chrome_ui_overrides',
     'chrome_url_overrides',
-    'commands',
+    ['commands', {unsupportProps: ['_execute_sidebar_action']}],
     'content_capabilities',
     'content_scripts',
     'content_security_policy',
@@ -122,7 +122,6 @@ const chrome = {
 // https://developer.mozilla.org/en-US/Add-ons/WebExtensions/manifest.json
 const firefox = {
   required: [
-    'applications',
     'version',
     'name',
     ['manifest_version', {value: 2}]
