@@ -20,19 +20,12 @@ const inputKey = (formatter) => (key) => {
       console.log(`Your extension id "${id}" is invalid`)
       console.log(`ex: addon-name@yourdomain.net`)
     }
-  }
-  if (key === 'manifest_version') {
+  } else if (key === 'manifest_version') {
     formatter.fillMustKey('manifest_version', 2)
-  }
-  if (key === 'name') {
-    let name = _package.name || ''
-    name = readlineSync.question(`Type your extension name (default: ${name}) :`) || _package.name
-    formatter.fillMustKey('name', name)
-  }
-  if (key === 'version') {
-    let version = _package.version || ''
-    version = readlineSync.question(`Type your extension version (default: ${version}) :`) || _package.version
-    formatter.fillMustKey('version', version)
+  } else {
+    let value = _package[key] || ''
+    value = readlineSync.question(`Type your extension ${key} (default: ${value}) :`) || _package[key]
+    formatter.fillMustKey(key, value)
   }
 }
 

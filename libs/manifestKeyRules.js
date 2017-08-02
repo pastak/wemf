@@ -182,6 +182,9 @@ const edge = {
   required: ['author', 'name', 'version'],
   optional: [
     'background',
+    ['browser_action', {
+      unsupportProps: ['browser_style']
+    }],
     'content_scripts',
     'content_security_policy',
     'default_locale',
