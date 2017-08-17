@@ -5,13 +5,13 @@ const GUID = require('guid')
 const keyRules = require('./manifestKeyRules')
 
 module.exports = class Formatter {
-  constructor (_path, browser = 'firefox') {
+  constructor (_path, browser = 'firefox', data = {}) {
     try {
       this.json = JSON.parse(fs.readFileSync(path.resolve(_path)))
       try {
         const _package = JSON.parse(fs.readFileSync(path.resolve('package.json')))
         const webextensionConfig = _package.webextension || {}
-        this.json = Object.assign(webextensionConfig, this.json)
+        this.json = Object.assign(webextensionConfig, this.json, data)
         ;['name', 'version', 'author', 'description', 'homepage_url'].forEach((key) => {
           if (this.json[key] === 'inherit') this.json[key] = _package[key === 'homepage_url' ? 'homepage' : key]
         })

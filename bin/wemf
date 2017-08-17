@@ -38,6 +38,7 @@ program
   .option('--browser <browser-name>', 'Set target browser (chrome|firefox|edge) default: firefox')
   .option('--no-color', 'disable color in output')
   .option('--quiet', 'hide WARNING and RECOMMEND messages')
+  .option('--data <jsonString>', 'data to overwrite manifest.json')
   .action((packageJsonPath) => {
 
     const RESET_COLOR = program.color ? '\u001b[0m' : ''
@@ -54,7 +55,11 @@ program
       console.error('You should choose browser from [chrome,firefox,edge]')
       process.exit(1)
     }
-    const formatter = new Formatter(packageJsonPath, browser)
+    let data = program.data
+    try {
+      data = JSON.parse(String(data))
+    } catch (e) {}
+    const formatter = new Formatter(packageJsonPath, browser, data)
     if (!program.quiet && formatter.recommendMessage.length > 0) {
       console.warn(RECOMMEND_TEXT + ': ' + formatter.recommendMessage.join('\n' + RECOMMEND_TEXT + ': '))
     }

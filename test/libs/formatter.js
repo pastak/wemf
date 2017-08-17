@@ -16,7 +16,6 @@ test('checkUnsupportedKeyOrProps', t => {
 test('checkRequiredKey', t => {
   const formatter = new Formatter('../fixtures/check_must_key.json')
   t.ok(formatter.checkRequiredKey() === false)
-  t.ok(formatter.shouldContainKeys.indexOf('applications') > -1 === true)
   t.ok(formatter.shouldContainKeys.indexOf('manifest_version') > -1 === true)
   t.ok(formatter.shouldContainKeys.indexOf('name') > -1 === true)
   t.ok(formatter.shouldContainKeys.indexOf('version') > -1 === true)
@@ -24,50 +23,6 @@ test('checkRequiredKey', t => {
   const formatter2 = new Formatter('../fixtures/check_must_key_pass.json')
   t.ok(formatter2.checkRequiredKey() === true)
   t.is(formatter2.shouldContainKeys.length, 0)
-})
-
-test('fillMustKey `applications`', t => {
-  // Write Only Id String
-  const formatter = new Formatter('../fixtures/check_must_key.json')
-  formatter.fillMustKey('applications', 'sample-extension@example.com')
-  t.is(formatter.shouldContainKeys.indexOf('applications') > -1, false)
-  t.is(formatter.json.applications.gecko.id, 'sample-extension@example.com')
-  t.is(formatter.checkApplicationsKeyFormat(), true)
-
-  // Write `id`'s Key and Val
-  const formatter2 = new Formatter('../fixtures/check_must_key.json')
-  formatter2.fillMustKey('applications', {id: 'sample-extension@example.com'})
-  t.is(formatter2.shouldContainKeys.indexOf('applications') > -1, false)
-  t.is(formatter2.json.applications.gecko.id, 'sample-extension@example.com')
-  t.is(formatter2.checkApplicationsKeyFormat(), true)
-
-  // Write Full Structor
-  const formatter3 = new Formatter('../fixtures/check_must_key.json')
-  formatter3.fillMustKey({
-    applications :{
-      gecko: {id: 'sample-extension@example.com'}
-    }
-  })
-  t.is(formatter3.shouldContainKeys.indexOf('applications') > -1, false)
-  t.is(formatter3.json.applications.gecko.id, 'sample-extension@example.com')
-  t.is(formatter3.checkApplicationsKeyFormat(), true)
-
-  // Write invalid Id String
-  const formatter4 = new Formatter('../fixtures/check_must_key.json')
-  formatter4.fillMustKey('applications', 'authoradgadkdaldgau')
-  t.is(formatter4.shouldContainKeys.indexOf('applications') > -1, false)
-  t.is(formatter4.checkApplicationsKeyFormat(), false)
-
-  // Write invalid Id String
-  const formatter5 = new Formatter('../fixtures/check_must_key.json')
-  formatter5.fillMustKey('applications', 'author+amo@example.com')
-  t.is(formatter5.shouldContainKeys.indexOf('applications') > -1, false)
-  t.is(formatter5.checkApplicationsKeyFormat(), false)
-
-  // id's domain has 2 .(dots)
-  const formatter6 = new Formatter('../fixtures/check_must_key.json')
-  formatter6.fillMustKey('applications', 'test@kmc.gr.jp')
-  t.is(formatter6.checkApplicationsKeyFormat(), true)
 })
 
 test('fillMustKey `version`', t => {
@@ -111,7 +66,6 @@ test('fillMustKey `name`', t => {
 
 test('fillMustKeys', t => {
   const formatter = new Formatter('../fixtures/check_must_key.json')
-  formatter.fillMustKey('applications', 'sample-extension@example.com')
   formatter.fillMustKey('name', 'test')
   formatter.fillMustKey('manifest_version')
   formatter.fillMustKey('version', '0.0.1')
