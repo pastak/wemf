@@ -127,6 +127,7 @@ const firefox = {
     ['manifest_version', {value: 2}]
   ],
   optional: [
+    'applications',
     'author',
     ['background', {unsupportProps: ['persistent']}],
     'browser_action',
