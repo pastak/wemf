@@ -4,7 +4,7 @@
 const fs = require('fs')
 const path = require('path')
 const program = require('commander')
-const readlineSync = require('readline-sync')
+const promptSync = require('prompt-sync')()
 const Formatter = require('../libs/formatter')
 let _package = {}
 try {
@@ -14,7 +14,7 @@ try {
 const inputKey = (formatter) => (key) => {
   if (key === 'applications') {
     while (1) {
-      const id = readlineSync.question('Type your extension id :')
+      const id = promptSync('Type your extension id :')
       formatter.fillMustKey('applications', id)
       if (formatter.checkApplicationsKeyFormat()) break
       console.log(`Your extension id "${id}" is invalid`)
@@ -24,7 +24,7 @@ const inputKey = (formatter) => (key) => {
     formatter.fillMustKey('manifest_version', 2)
   } else {
     let value = _package[key] || ''
-    value = readlineSync.question(`Type your extension ${key} (default: ${value}) :`) || _package[key]
+    value = promptSync(`Type your extension ${key} (default: ${value}) :`, _package[key])
     formatter.fillMustKey(key, value)
   }
 }
